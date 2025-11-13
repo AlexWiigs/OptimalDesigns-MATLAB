@@ -7,16 +7,35 @@ installation guide and usage notes below for setup information.
 
 ## Example
 
-```{matlab}
-# Example goes here.
+```matlab
+% Example goes here.
 ```
 
 ## Installation Guide
 
-In addition to a working MATLAB licence, This software requires:
+### Requirements
 
-- [CVX](https://github.com/cvxr/CVX) which provides access to solvers such as Mosek and Gurobi.
-- The MATLAB function [particleswarm](https://www.mathworks.com/help/gads/particleswarm.html?utm_source=chatgpt.com), available through the [Global Optimization Toolbox](https://www.mathworks.com/help/gads/index.html).
+This software requires:
+
+- **MATLAB R2024a** (earlier versions may work but have not been tested).
+- [CVX (latest version)](https://github.com/cvxr/CVX) which provides access to solvers such as Mosek and Gurobi.
+- [Global Optimization Toolbox](https://www.mathworks.com/help/gads/index.html) which provides the function [particleswarm](https://www.mathworks.com/help/gads/particleswarm.html?utm_source=chatgpt.com).
+
+### Installation
+
+1. **Clone the repository**
+```bash
+git clone https://github.com/AlexWiigs/OptimalDesigns-MATLAB.git
+```
+2. **Add project to your MATLAB path**
+
+In MATLAB run:
+```matlab
+addpath(genpath('/path/to/OptimalDesigns-MATLAB'));
+savepath
+```
+
+The package is ready to use!
 
 ## Usage
 
@@ -29,7 +48,7 @@ solution. The two objects which we specify are:
 These objects get past into a solution class which returns the optimal design as
 an object.
 
-```{matlab}
+```matlab
 classdef DesignProblem
   properties
     model
