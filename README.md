@@ -20,4 +20,34 @@ In addition to a working MATLAB licence, This software requires:
 
 ## Usage
 
-Here is where my use case will go.
+OptimalDesign works by creating two objects and returns a new third object as a
+solution. The two objects which we specify are:
+
+1. The design problem to solve.
+2. The solver algorithm we would like to utilize and it's settings
+
+These objects get past into a solution class which returns the optimal design as
+an object.
+
+```{matlab}
+classdef DesignProblem
+  properties
+    model
+    range
+    variable
+    degree
+    criteria
+  end
+
+  methods
+    function obj = DesignProblem(model, range, variable, degree, criteria)
+      obj.model = model;
+      obj.range = range;
+      obj.variable = variable;
+      obj.degree = degree;
+      obj.criteria = criteria;
+    end
+  end
+
+end
+```
