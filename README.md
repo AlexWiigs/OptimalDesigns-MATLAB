@@ -39,14 +39,32 @@ The package is ready to use!
 
 ## Usage
 
-OptimalDesign works by creating two objects and returns a new third object as a
-solution. The two objects which we specify are:
+OptimalDesign works by defining two objects, one where you specify an optimal
+design problem that you would like to be solved and one specifying how you would
+like the solver to calculate the solution. 
 
-1. The design problem to solve.
-2. The solver algorithm we would like to utilize and it's settings
+**DesignProblem**
 
-These objects get past into a solution class which returns the optimal design as
-an object.
+- Holds the regression model
+- Holds the design space
+- Specifies the optimality criteria
+
+**Solver (parent class)**
+
+- Has a common interface for each solver
+- Stores the final design, weights, status, timing, etc
+- Uses children to implement the solve method
+
+**CVXSolver < Solver**
+
+- takes a DesignProblem
+- Implements `solve()` using CVX
+- Produces solver diagnostics
+
+**PSOSolver < Solver**
+
+- takes a DesignProblem
+- Implements `solver()` using PSO
 
 ```matlab
 classdef DesignProblem

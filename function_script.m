@@ -26,4 +26,5 @@ for i = 1:5
   disp(calculateBasis(points(i, :), v, d))
 end
 
+% Test the informaiton matrix here
 
