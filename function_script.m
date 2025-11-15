@@ -1,13 +1,29 @@
 % Initialize a design problem as an object:
 
+%% Problem Parameters
 model = "polynomial";
-r = 2;
-v = 2;
-d = 2;
+r = 1;
+v = 1;
+d = 1;
+% pilot_beta = [1, 1, 1, 1, 1, 1];
 criteria = "D";
-
 problem = od.DesignProblem(model, r, v, d, criteria);
 disp(problem)
+
+%% Solver Parameters:
+u_dim = 11;
+solver = od.CVXSolver(problem, u_dim);
+result = solver.solve();
+
+disp(result)
+
+
+
+%% Function Tests:
+
+
+
+
 
 % Test gridPoints
 
@@ -27,4 +43,3 @@ for i = 1:5
 end
 
 % Test the informaiton matrix here
-

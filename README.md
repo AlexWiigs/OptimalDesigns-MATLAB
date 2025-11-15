@@ -7,9 +7,41 @@ installation guide and usage notes below for setup information.
 
 ## Example
 
+Define a design problem and select a solver method:
 ```matlab
-% Example goes here.
+>> model = "polynomial"; %% define a design problem
+>> r = 1;
+>> v = 1;
+>> d = 1;
+>> criteria = "D";
+>> problem = od.DesignProblem(model, r, v, d, criteria);
+>> disp(problem)
+  DesignProblem with properties:
+
+                  model: "polynomial"
+                  range: 1
+          num_variables: 1
+             max_degree: 1
+    optimality_criteria: "D"
+             pilot_beta: []
 ```
+
+Find the optimal design:
+```matlab
+
+>> solver = od.CVXSolver(problem, u_dim);
+>> result = solver.solve();
+>>
+>> disp(result)
+             solver: "CVX"
+             status: "ok"
+     support_points: [11×1 double]
+            weights: [2×1 double]
+        info_matrix: [2×2 double]
+    criterion_value: 4.6052
+            runtime: 0.5112
+```
+
 
 ## Installation Guide
 
@@ -18,7 +50,7 @@ installation guide and usage notes below for setup information.
 This software requires:
 
 - **MATLAB R2024a** (earlier versions may work but have not been tested).
-- [CVX (latest version)](https://github.com/cvxr/CVX) which provides access to solvers such as Mosek and Gurobi.
+- [CVX (latest version)](https://github.com/cvxr/CVX) which provides access to solvers such as SDPT3 and SeDuMi.
 - [Global Optimization Toolbox](https://www.mathworks.com/help/gads/index.html) which provides the function [particleswarm](https://www.mathworks.com/help/gads/particleswarm.html?utm_source=chatgpt.com).
 
 ### Installation
@@ -60,6 +92,15 @@ like the solver to calculate the solution.
 - takes a DesignProblem
 - Implements `solve()` using CVX
 - Produces solver diagnostics
+
+**Default Settings:**
+
+```matlab
+precision = "default";
+voerbose = false;
+max_iters = [];
+u_dim = 5
+```
 
 **PSOSolver < Solver**
 
