@@ -31,29 +31,36 @@ classdef CVXSolver < od.Solver
 
             U     = obj.problem.gridPoints(obj.u_dim);
             B     = obj.problem.basisMatrix(U);
-            k     = size(B, 2);
+            k     = size(B, 1);
             gamma = obj.problem.fisherWeights(B);
             Mi = obj.informationTensor(gamma, B);
             %% FIXME: Add V for variance if necessary
 
-            cvx_begin quiet % cvx block starts
-            cvx_precision high
-            variable w(k);
-            M = 0;
-            V = 1;
-            for i = 1:k
-              M = M + w(i) * Mi(:, :, i);
-            end
-            objective = obj.objectiveFunction(M, V);
-            minimize(objective)
+            cvx_begin quiet% cvx block starts
+              cvx_precision high
+              variable w(k);
+              M = 0;
+              V = 1;
+              for i = 1:k
+                M = M + w(i) * Mi(:, :, i);
+              end 
 
-            subject to
-            0 <= w <= 1;
-            sum(w) == 1
+              switch string(obj.problem.optimality_criteria)
+                case "D"
+                  maximize(log_det(M))
+                case "A"
+                  minimize( trace_inv(M))
+                case "E"
+                  maximize(lambda_min(M))
+              end
+
+              subject to
+              0 <= w <= 1;
+              sum(w) == 1
             cvx_end % cvx block ends
 
-            x = U;
-            M = double(M);
+            x = U; %% FIXME: switch to keep once bugs are fixed
+            M = double(M); %% change back
             w = double(w);
             crit = cvx_optval;
         end
@@ -67,23 +74,5 @@ classdef CVXSolver < od.Solver
             Mi(:, :, i) = gamma(i) * B(i,:)' * B(i,:);
           end
         end
-
-        function objective_function = objectiveFunction(obj, M, V2inv)
-
-            switch string(obj.problem.optimality_criteria)
-              case "D"
-                objective_function = -log_det(M);
-              case "A"
-                objective_function = trace_inv(M);
-              case "E"
-                objective_function = -lambda_min(M);
-              case "I"
-                objective_function = 1;
-              otherwise
-                error("Onle D-, A-, E-, I-optimality supported in CVXSolver.")
-            end
-        end
-
-
     end
 end

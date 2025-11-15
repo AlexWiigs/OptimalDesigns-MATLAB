@@ -3,12 +3,12 @@
 %% Problem Parameters
 model = "polynomial";
 r = 1;
-v = 1;
-d = 1;
+v = 2;
+d = 2;
 % pilot_beta = [1, 1, 1, 1, 1, 1];
-criteria = "D";
+criteria = "E";
 problem = od.DesignProblem(model, r, v, d, criteria);
-disp(problem)
+% disp(problem)
 
 %% Solver Parameters:
 u_dim = 11;
@@ -16,13 +16,12 @@ solver = od.CVXSolver(problem, u_dim);
 result = solver.solve();
 
 disp(result)
-
+disp(result.info_matrix)
+disp(result.weights)
+disp(sum(result.weights))
 
 
 %% Function Tests:
-
-
-
 
 
 % Test gridPoints

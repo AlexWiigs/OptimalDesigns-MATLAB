@@ -4,6 +4,7 @@ classdef (Abstract) Solver < handle
     properties
         problem            % DesignProblem associated with this solver
         algorithm          % "CVX", "PSO", etc.
+
         criterion_value    % value of D/A/E/I criterion at the solution
         support_points     % matrix of support points
         weights            % corresponding weights
