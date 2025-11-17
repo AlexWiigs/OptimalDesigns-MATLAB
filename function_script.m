@@ -3,11 +3,13 @@
 %% Problem Parameters
 model = "polynomial";
 r = 1;
-v = 2;
-d = 2;
+v = 1;
+d = 1;
 % pilot_beta = [1, 1, 1, 1, 1, 1];
-criteria = "E";
+criteria = "I";
 problem = od.DesignProblem(model, r, v, d, criteria);
+variance = problem.predictVariance(3);
+disp(variance)
 % disp(problem)
 
 %% Solver Parameters:

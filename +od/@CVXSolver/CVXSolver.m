@@ -34,7 +34,9 @@ classdef CVXSolver < od.Solver
             k     = size(B, 1);
             gamma = obj.problem.fisherWeights(B);
             Mi = obj.informationTensor(gamma, B);
-            %% FIXME: Add V for variance if necessary
+            if obj.criterion_value == "I"
+              V = obj.problem.predictVariance(obj.u_dim);
+            end
 
             cvx_begin quiet% cvx block starts
               cvx_precision high
@@ -52,6 +54,9 @@ classdef CVXSolver < od.Solver
                   minimize( trace_inv(M))
                 case "E"
                   maximize(lambda_min(M))
+                case "I" 
+                  MV = V * M * V; % BUG: I-optimal designs don't work
+                  minimize(trace_inv(MV))
               end
 
               subject to
