@@ -104,28 +104,8 @@ u_dim = 5
 
 **PSOSolver < Solver**
 
-- takes a DesignProblem
-- Implements `solver()` using PSO
-
-```matlab
-classdef DesignProblem
-  properties
-    model
-    range
-    variable
-    degree
-    criteria
-  end
-
-  methods
-    function obj = DesignProblem(model, range, variable, degree, criteria)
-      obj.model = model;
-      obj.range = range;
-      obj.variable = variable;
-      obj.degree = degree;
-      obj.criteria = criteria;
-    end
-  end
-
-end
-```
+For the complete documentation on each classes' properties and methods, please
+the documentation:
+- [DesignProblem](/docs/DesignProblem.md)
+- [CVXSolver](/docs/CVXSolver.md)
+- [PSOSOlver](/docs/PSOSolver.md)

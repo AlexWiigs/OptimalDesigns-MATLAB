@@ -1,46 +1,47 @@
-% Initialize a design problem as an object:
 
-%% Problem Parameters
-model = "polynomial";
-r = 1;
-v = 1;
-d = 1;
-% pilot_beta = [1, 1, 1, 1, 1, 1];
-criteria = "I";
+
+%%%%%%%%%%%%%%%%%%%% Constructor %%%%%%%%%%%%%%%%%%%%%%%
+
+model = "polynomial"; % Create a design problem
+r = 5;
+v = 2;
+d = 2;
+criteria = "D";
 problem = od.DesignProblem(model, r, v, d, criteria);
+
+disp(problem)
+
+%%%%%%%%%%%%%%%%%%% Public Methods %%%%%%%%%%%%%%%%%%%%%%
+
+gridpoints = problem.gridPoints(3);
+disp(gridpoints')
+
+basis_vectors = problem.basisMatrix(gridpoints)
+
+
+
+
+
+
+
+
+
+
+
+
+variance = problem.predictVariance(3); % TODO: Add these public functions to the README.md
+disp(variance)
+
+
+
+
 variance = problem.predictVariance(3);
 disp(variance)
 % disp(problem)
-
-%% Solver Parameters:
-u_dim = 11;
-solver = od.CVXSolver(problem, u_dim);
-result = solver.solve();
-
-disp(result)
-disp(result.info_matrix)
-disp(result.weights)
-disp(sum(result.weights))
+X = problem.gridPoints(11);
+problem.calculateBasis()
+problem.basisMatrix(X);
 
 
-%% Function Tests:
 
 
-% Test gridPoints
-
-u_dim = 5;
-points = gridPoints(r, u_dim, v);
-disp(points(1:5, :))
-
-% test calcaulteBasis
-
-format bank % changes display not stored values
-first_point = points(1, :);
-numTerms = nchoosek(v + d, d);
-disp(numTerms)
-disp("Output order is Graded lexicographic")
-for i = 1:5
-  disp(calculateBasis(points(i, :), v, d))
-end
-
-% Test the informaiton matrix here
