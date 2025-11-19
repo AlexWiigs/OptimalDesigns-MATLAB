@@ -1,6 +1,10 @@
 # DesignProblem
 
-**Purpose:** Represents a regression model, design space, degree, and optimality criterion.
+The DesignProblem class allows us to instantiate a optimal design problem
+specified by its:
+* Regression model
+* Design space
+* Optimality Criteria
 
 ## Constructor
 ```matlab
@@ -13,7 +17,7 @@
 * **d:** max power of the monomials in regression model. Must be $\geq 0$
 * **criterion:** specifies criteria for an optimal design. Options: "D", "A", "E", "I".
 
-**Example**
+**Example:**
 
 ```matlab
 >> model = "polynomial";
@@ -37,6 +41,22 @@
 
 ## Public Methods
 
+DesignProblem contains many methods for calcualting mathematical results
+relavent to the optimization problem. the solvers are designed to use these values
+automatically. Nevertheless, I have opted to keep most of these methods public to provide
+the user with the ability to reference them for research or troubleshooting.
+
+```matlab
+>> methods('od.DesignProblem')
+
+Methods for class od.DesignProblem:
+
+DesignProblem              fisherWeights              predictVariance
+basisMatrix                generateMonomialExponents
+calculateBasis             gridPoints
+
+```
+
 ### Cover DesignProblem with grid points
 
 The `gridPoints()` method gets an integer which represents the amount of evenly
@@ -46,6 +66,7 @@ resulting lattice grid. This function is very useful for using CVXSolver or
 estimating the response variance of the regression model.
 
 **Example:**
+
 Using the design problem specified under the constructor heading:
 ```matlab
 >> u_dim = 3; % specify support points per dimension
@@ -59,12 +80,13 @@ Using the design problem specified under the constructor heading:
 ### Calcaulate basis vectors for each potential design point
 
 The `basisMatrix()` method expects a $k \times v$ matrix, where each row
-represents a potential point in the design matrix and returns a basis vector
+represents a support point in the design matrix and returns a basis vector
 calculated at the point. These basis matrices are used to calculate the fisher
 information matrix which are optimized differently depending on the design
 criteria specified.
 
-**Example**
+**Example:**
+
 Using the design problem specified under the constructor heading, and the grid
 points calculated in the `gridPoints()` example:
 ```matlab
@@ -82,3 +104,53 @@ points calculated in the `gridPoints()` example:
 
 ```
 
+### Calculate Information matrix
+
+ADD
+
+### Calculate Fisher weights
+
+When solving for a GLM regression model (logistic, Poisson, etc...) the mean
+response changes with the linear predictor through the link function. Thus it is
+necessary to calcaulte a calibration weight for each design points contribution
+to the design problem. These weights require passing an optional list
+`pilot_betas`, of priliminary estimates for the model linear parameters. If no
+vector is passed a preliminary estiamte of $0$ gets passed for each parameter
+estimate.
+
+**Example:**
+
+```matlab
+>> problem = od.DesignProblem("logistic", 5, 2, 2, "D"); % model, r, v, d, criteria
+>> gridpoints = problem.gridPoints(3);
+>> basis_vectors = problem.basisMatrix(gridpoints);
+>> fisherweights = problem.fisherWeights(basis_vectors);
+>> disp(fisherweights')
+    0.2500    0.2500    0.2500    0.2500    0.2500    0.2500    0.2500    0.2500    0.2500
+
+```
+
+### Estimate the prediction variance of the response
+
+For optimality criteria focused on reducing the reponse of the regression model,
+such as I-optimality, it is necessary to estiamte the predicted response
+variance of the model. This can be done by covering the design surface with
+points and using them to estiamte the variance numerically. Much like
+`gridPoints()`, `predictVariance()` requires passing an integer which represents
+the points each variable gets split into, resulting a total design covering of
+$u_{\text{dim}}^{v}$ points. The more points used to cover the design space, the
+more accurate the prediction variance will become.
+
+**Example:**
+
+```matlab
+>> prediction_variance = problem.predictVariance(3);
+>> disp(prediction_variance)
+    1.0000         0         0   16.6667         0   16.6667
+         0   16.6667         0         0         0         0
+         0         0   16.6667         0         0         0
+   16.6667         0         0  416.6667         0  277.7778
+         0         0         0         0  277.7778         0
+   16.6667         0         0  277.7778         0  416.6667
+
+```

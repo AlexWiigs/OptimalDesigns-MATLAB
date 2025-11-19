@@ -1,14 +1,6 @@
-
-
 %%%%%%%%%%%%%%%%%%%% Constructor %%%%%%%%%%%%%%%%%%%%%%%
 
-model = "polynomial"; % Create a design problem
-r = 5;
-v = 2;
-d = 2;
-criteria = "D";
-problem = od.DesignProblem(model, r, v, d, criteria);
-
+problem = od.DesignProblem("polynomial", 5, 2, 2, "D"); % model, r, v, d, criteria
 disp(problem)
 
 %%%%%%%%%%%%%%%%%%% Public Methods %%%%%%%%%%%%%%%%%%%%%%
@@ -16,15 +8,16 @@ disp(problem)
 gridpoints = problem.gridPoints(3);
 disp(gridpoints')
 
-basis_vectors = problem.basisMatrix(gridpoints)
+basis_vectors = problem.basisMatrix(gridpoints);
+disp(basis_vectors)
 
+problem.generateMonomialExponents() %% TODO: Add to public functions README.md
 
-
-
-
-
-
-
+problem = od.DesignProblem("logistic", 5, 2, 2, "D"); % model, r, v, d, criteria
+gridpoints = problem.gridPoints(3);
+basis_vectors = problem.basisMatrix(gridpoints);
+fisherweights = problem.fisherWeights(basis_vectors);
+disp(fisherweights')
 
 
 

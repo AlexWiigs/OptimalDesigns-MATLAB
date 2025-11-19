@@ -69,7 +69,14 @@ savepath
 
 The package is ready to use!
 
-## Usage
+## Quickstart Guide
+
+For the complete documentation on each classes' properties and methods, please
+the documentation:
+
+- [DesignProblem](/docs/DesignProblem.md)
+- [CVXSolver](/docs/CVXSolver.md)
+- [PSOSOlver](/docs/PSOSolver.md)
 
 OptimalDesign works by defining two objects, one where you specify an optimal
 design problem that you would like to be solved and one specifying how you would
@@ -104,8 +111,3 @@ u_dim = 5
 
 **PSOSolver < Solver**
 
-For the complete documentation on each classes' properties and methods, please
-the documentation:
-- [DesignProblem](/docs/DesignProblem.md)
-- [CVXSolver](/docs/CVXSolver.md)
-- [PSOSOlver](/docs/PSOSolver.md)
