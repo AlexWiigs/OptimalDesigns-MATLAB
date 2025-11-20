@@ -1,83 +1,77 @@
 classdef CVXSolver < od.Solver
 
-    properties
-        precision   % "high", "default", "low", etc.
-        verbose     % true/false to control CVX output
-        max_iters   % optional override for CVX max iterations
-        u_dim       % support points per dimension for covering the design space
+  properties
+    u_dim
+    quiet logical = true
+    precision string = "default"
+  end
+
+  methods
+    function obj = CVXSolver(problem, u_dim, options)
+      arguments
+        problem
+        u_dim (1,1) double {mustBePositive}
+        options.precision string = "default"
+        options.quiet logical = true
+      end
+
+      obj@od.Solver(problem, "CVX");
+      obj.u_dim = u_dim;
+      obj.quiet = options.quiet;
+      obj.precision = options.precision;
     end
+  end
 
-    methods
+  methods (Access = protected)
+    function [X, w, M, crit] = solve_core(obj)
+      X  = obj.problem.gridPoints(obj.u_dim);
+      Mi = obj.problem.informationTensor(X);
+      k  = size(X, 1);
 
-        function obj = CVXSolver(problem, u_dim, precision, verbose, max_iters)
+      if obj.quiet                                        % CVX control output
+        cvx_begin quiet
+      else
+        cvx_begin
+      end
 
-            obj@od.Solver(problem, "CVX"); % call parent constructor
-            if nargin < 2, u_dim = 5; end % default values
-            if nargin < 3, precision = "default"; end
-            if nargin < 4, verbose = false; end
-            if nargin < 5, max_iters = []; end
-
-            % Assign to properties
-            obj.u_dim     = u_dim;
-            obj.precision = precision;
-            obj.verbose   = verbose;
-            obj.max_iters = max_iters;
-        end
-    end
-
-    methods (Access = protected)
-
-        function [x, w, M, crit] = solve_core(obj)
-
-            U     = obj.problem.gridPoints(obj.u_dim);
-            B     = obj.problem.basisMatrix(U);
-            k     = size(B, 1);
-            gamma = obj.problem.fisherWeights(B);
-            Mi = obj.informationTensor(gamma, B);
-            if obj.criterion_value == "I"
-              V = obj.problem.predictVariance(obj.u_dim);
-            end
-
-            cvx_begin quiet% cvx block starts
-              cvx_precision high
-              variable w(k);
-              M = 0;
-              V = 1;
-              for i = 1:k
-                M = M + w(i) * Mi(:, :, i);
-              end 
-
-              switch string(obj.problem.optimality_criteria)
-                case "D"
-                  maximize(log_det(M))
-                case "A"
-                  minimize( trace_inv(M))
-                case "E"
-                  maximize(lambda_min(M))
-                case "I" 
-                  MV = V * M * V; % BUG: I-optimal designs don't work
-                  minimize(trace_inv(MV))
-              end
-
-              subject to
-              0 <= w <= 1;
-              sum(w) == 1
-            cvx_end % cvx block ends
-
-            x = U; %% FIXME: switch to keep once bugs are fixed
-            M = double(M); %% change back
-            w = double(w);
-            crit = cvx_optval;
+        mode = char(obj.precision);                       % specify precision
+        if ~strcmp(mode, "default")
+          cvx_precision(mode)
         end
 
-        function Mi = informationTensor(obj, gamma, B)
-
-          k =  size(B, 1);
-          h = size(B, 2);
-          Mi = zeros(h, h, k);
-          for i = 1:k
-            Mi(:, :, i) = gamma(i) * B(i,:)' * B(i,:);
-          end
+        variable w(k)
+        M = 0;
+        for i = 1:k
+          M = M + w(i) * Mi(:, :, i);                     % calcualte information matrix
         end
+
+        switch upper(obj.problem.criteria)
+          case "D"
+            maximize( log_det(M) )
+
+          case "A"
+            minimize( trace_inv(M) )
+
+          case "E"
+            maximize( lambda_min(M) )
+
+          case "I"
+            V = obj.problem.I_matrix;   % you define this in DesignProblem
+            minimize( trace(V * inv(M)) )
+
+          otherwise
+            error("Unknown optimality criterion: %s", ...
+                obj.problem.optimality_criteria);
+        end
+
+        % minimize( -log_det(M) )                
+        % minimize()
+        subject to
+          0 <= w <= 1;
+          sum(w) == 1;
+      cvx_end
+
+      crit = log_det(M);
     end
+  end
 end

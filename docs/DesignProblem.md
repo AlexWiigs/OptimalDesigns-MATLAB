@@ -11,11 +11,25 @@ specified by its:
 >> obj = DesignProblem(model, range, v, d, criterion)
 ```
 
-* **model:** A string which represent the regression model type. Options: "polynomial", "poisson", "binomial".
-* **range:** length about each side of the origin each variable is defined. Must be $\geq 0$.
-* **v:** number of regressors in the model. Must be $\geq 0$.
-* **d:** max power of the monomials in regression model. Must be $\geq 0$
-* **criterion:** specifies criteria for an optimal design. Options: "D", "A", "E", "I".
+* **model:** A string which represent the regression model type.
+    Valid Inputs: "polynomial", "poisson", "logistic"
+* **range:** length about each side of the origin each variable is defined.
+    Valid Inputs: int $\geq 1$
+* **v:** number of regressors in the model.
+    Valid Inputs: int $\geq 1$
+* **d:** max power of the monomials in regression model.
+    Valid Inputs: int $\geq 1$
+* **criterion:** A String which specifies criteria for an optimal design.
+    Valid Inputs: "D", "A", "E", "I"
+
+**Optinal parameters**
+must be entered at after the mandatory paramters.
+
+* {**pilot_beta:** a vector of length $\binom{v +d}{d}$, which specifies the
+initial estimates for linear parameters in a pilot study. These are necessary
+for finding GLM optimal designs. If "polynomial" is picked an empty list will be
+passed to the design object which is not used. If no pilot_beta is passed for a
+GLm, a zero vector will be used instead.}
 
 **Example:**
 

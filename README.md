@@ -71,8 +71,8 @@ The package is ready to use!
 
 ## Quickstart Guide
 
-For the complete documentation on each classes' properties and methods, please
-the documentation:
+For a complete treatment of each classes' properties and methods, please see the
+documentation:
 
 - [DesignProblem](/docs/DesignProblem.md)
 - [CVXSolver](/docs/CVXSolver.md)

@@ -1,4 +1,3 @@
-
 function B = basisMatrix(obj, X)
   if size(X, 2) ~= obj.num_variables
     error("basisMatrix expects a k-by-%d matix of points.", obj.num_variables);
