@@ -56,8 +56,14 @@ classdef CVXSolver < od.Solver
             maximize( lambda_min(M) )
 
           case "I"
-            V = obj.problem.I_matrix;   % you define this in DesignProblem
-            minimize( trace(V * inv(M)) )
+            V = obj.problem.predictVariance(obj.u_dim);  % Cajole CVX t accept VM
+            Vsym = (V + V.') / 2;
+            Vsqrt = sqrtm(Vsym);
+            Vsqrt_inv = inv(Vsqrt);
+
+            MV = Vsqrt_inv * M * Vsqrt_inv';
+            MV = 0.5 * (MV + MV');
+            minimize(trace_inv(MV))
 
           otherwise
             error("Unknown optimality criterion: %s", ...
