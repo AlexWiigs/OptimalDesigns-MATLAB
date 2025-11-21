@@ -1,45 +1,35 @@
 
 # OptimalDesign (MATLAB) Software
 
-This software provides the user with a flexible way to find a variety of
-optimal designs using both PSO and CVX-based algorithms. See the
-installation guide and usage notes below for setup information.
+This software provides the user with a flexible way to find a variety of optimal
+designs using both PSO and CVX-based algorithms in a few lines of code. See the
+installation guide and usage notes below for setup infomration.
 
 ## Example
 
 Define a design problem and select a solver method:
 ```matlab
->> model = "polynomial"; %% define a design problem
->> r = 1;
->> v = 1;
->> d = 1;
->> criteria = "D";
->> problem = od.DesignProblem(model, r, v, d, criteria);
->> disp(problem)
-  DesignProblem with properties:
+% model, range about origin, variables, degrees, optimality criteria
+>> problem = od.DesignProblem("polynomial", 5, 2, 1, "D"); 
+>> solver = od.CVXSolver(problem, 11); % support points per dimension
 
-                  model: "polynomial"
-                  range: 1
-          num_variables: 1
-             max_degree: 1
-    optimality_criteria: "D"
-             pilot_beta: []
 ```
 
-Find the optimal design:
+Find the optimal design and extract relevant properties:
 ```matlab
 
->> solver = od.CVXSolver(problem, u_dim);
 >> result = solver.solve();
->>
->> disp(result)
-             solver: "CVX"
-             status: "ok"
-     support_points: [11×1 double]
-            weights: [2×1 double]
-        info_matrix: [2×2 double]
-    criterion_value: 4.6052
-            runtime: 0.5112
+>> [support_points, weights] = result.filterWeights();
+>> disp(result.criterion_value)
+    6.4378
+
+>> disp(support_points')
+    -5     5    -5     5
+    -5    -5     5     5
+
+>> disp(weights')
+    0.2500    0.2500    0.2500    0.2500
+
 ```
 
 

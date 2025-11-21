@@ -22,7 +22,7 @@ classdef DesignResult
       end
     end
 
-    function [X_out, w_out] = filterSmallWeights(obj, options)
+    function [X_out, w_out] = filterWeights(obj, options)
 
       arguments
         obj

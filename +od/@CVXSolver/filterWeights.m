@@ -1,4 +1,4 @@
-function [X_out, w_out] = filterSmallWeights(obj, X_in, w_in, options)
+function [X_out, w_out] = filterWeights(obj, X_in, w_in, options)
   arguments
     obj
     X_in
