@@ -1,28 +1,11 @@
 %%% Test PSO %%%
 
-problem = od.DesignProblem("polynomial", 5, 2, 1, "D");
-disp(problem)
-
-solver = od.PSOSolver(problem, 6);
+problem = od.DesignProblem("polynomial", 5, 3, 3, "A");
+solver = od.CVXSolver(problem, 15);
 result = solver.solve();
 disp(result)
-disp(result.X)
 
-result.filterWeights()
-
-
-
-disp(solver)
-disp(solver.lb)
-disp(solver.ub)
-
-% model, range about origin, variables, degrees, optimality criteria
-problem = od.DesignProblem("polynomial", 5, 2, 1, "D");
-solver = od.CVXSolver(problem, 11); % support points per dimension
-
-result = solver.solve();
-[support_points, weights] = result.filterWeights();
-disp(result.criterion_value)
+[support_points, weights] = result.filterWeights2(threshold = 0.01, renormalize=true, merge_radius = 5);
 disp(support_points')
 disp(weights')
-
+sum(weights)
