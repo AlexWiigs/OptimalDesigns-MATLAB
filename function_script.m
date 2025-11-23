@@ -5,6 +5,9 @@ disp(problem)
 
 solver = od.PSOSolver(problem, 6);
 result = solver.solve();
+disp(result)
+disp(result.X)
+
 result.filterWeights()
 
 

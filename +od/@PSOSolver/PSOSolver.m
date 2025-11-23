@@ -1,102 +1,115 @@
-classdef PSOSolver < handle
+classdef PSOSolver < od.Solver
+
   properties
-    problem
     max_support
-    lb
-    ub
-    nvars
     options
   end
 
   methods
     function obj = PSOSolver(problem, max_support, options)
-      obj.problem     = problem;
-      obj.max_support = max_support;
-
-      if nargin < 3 || isempty(options)
-        obj.options = optimoptions('particleswarm');
-      else
-        obj.options = options;
+      arguments
+        problem
+        max_support (1,1) double {mustBePositive}
+        options.quiet logical = true   % placeholder; not used yet
       end
-      obj.computeBounds();
-    end
 
-    function result = solve(obj)
-      lb    = obj.lb;
-      ub    = obj.ub;
-      nvars = obj.nvars;
+      % Call parent Solver constructor with solver name "PSO"
+      obj@od.Solver(problem, "PSO");
 
-      crit = @(x) obj.objectiveFunction(x);
-
-      [x_opt, fval, exitflag, output] = particleswarm( ...
-        crit, nvars, lb, ub, obj.options);
-
-      v = obj.problem.num_variables;
-      k = obj.max_support;
-
-      support_points = reshape(x_opt(1 : v * k), [k, v]);   % k×v
-
-      weights = x_opt(v * k + 1 : v * k + k);          % k×1
-      weights = weights(1:end) / sum(weights(1:end));
-
-      result = struct();
-      result.solver          = "PSO";
-      result.criterion       = "D";
-      result.status          = exitflag;
-      result.criterion_value = fval;
-      result.support_points  = support_points;
-      result.weights         = weights;
-      result.lb              = lb;
-      result.ub              = ub;
-      result.nvars           = nvars;
-      result.output          = output;
-      result.raw_solution    = x_opt;
+      obj.max_support = max_support;
+      obj.options     = options;  % stored for future use (PSO options later)
     end
   end
 
-  methods (Access = private)
-    function computeBounds(obj)
+  methods (Access = protected)
+    function [X, w, M, crit] = solve_core(obj)
+      % TEMP: no PSO yet. Just compute lb, ub, nvars and return them.
+
       v     = obj.problem.num_variables;
       k     = obj.max_support;
       range = obj.problem.range;
+      nvars = v * k + k;
 
-      lb_coords   = -range * ones(v * k, 1);
-      ub_coords   =  range * ones(v * k, 1);
-      lb_weights  = zeros(k, 1);
-      ub_weights  = ones(k, 1);
+      % Calculate the bounds
+      lb_coords  = -range * ones(v * k, 1);
+      ub_coords  =  range * ones(v * k, 1);
+      lb_weights = zeros(k, 1);
+      ub_weights = ones(k, 1);
+      lb = [lb_coords; lb_weights];
+      ub = [ub_coords; ub_weights];
 
-      obj.lb    = [lb_coords; lb_weights];
-      obj.ub    = [ub_coords; ub_weights];
-      obj.nvars = v * k + k;
+      % Call particleswarm
+      objective = @(x) obj.objectiveFunction(x);
+      x_opt = particleswarm(objective, nvars, lb, ub);
+
+      % extract information
+      support_points = x_opt(1: v*k);
+      support_points = reshape(support_points, [k, v]);
+      weights = x_opt(v*k + 1 : v*k + k);
+      weights = weights(1:k) / sum(weights(1:k));
+
+      % Return them in the slots expected by Solver/DesignResult
+      X    = support_points;      % so result.X = lb
+      w    = weights;      % so result.w = ub
+      M    = nvars;   % so result.M = nvars (scalar)
+      crit = NaN;     % no criterion yet
     end
 
-    function val = objectiveFunction(obj, x)
-      % --- Unpack x into points and weights ---
+    function phi = objectiveFunction(obj, x)
       v = obj.problem.num_variables;
       k = obj.max_support;
+      d = obj.problem.max_degree;
+      h = nchoosek(v + d, d);
+      M = zeros(h, h);
 
-      support_points = reshape(x(1 : v * k), [k, v]);   % k×v
-      weights        = x(v * k + 1 : v * k + k);        % k×1
-      weights(1:end) = weights(1:end) / sum( weights(1:end));
-      Mi_tensor = obj.problem.informationTensor(support_points);  
+      % unpack
+      support_points = reshape(x(1 : v * k), [k, v]);
+      weights        = x(v * k + 1 : v * k + k);
 
-      % Combine: M = sum_j w_j * M_j
-      [m1, m2, kk] = size(Mi_tensor);
-      M = zeros(m1, m2);
-      for j = 1:kk
-          M = M + weights(j) * Mi_tensor(:, :, j);
+      % safe normalize weights
+      s = sum(weights);
+      if s <= 0 || ~isfinite(s)
+        phi = 1e12;    % big penalty for degenerate particle
+        return;
+      end
+      weights = weights / s;
+
+      % information matrix
+      Mi = obj.problem.informationTensor(support_points);
+      for i = 1:k
+        M = M + weights(i) * Mi(:, :, i);
       end
 
-      % --- Evaluate D‐optimal criterion ---
-      d = det(M);
+      switch upper(obj.problem.criteria)
+        case "D"
+          detM = det(M);
+          if detM <= 0 || ~isfinite(detM)
+            phi = 1e12;
+          else
+            phi = -log(detM);
+          end
 
-      % Debug friendliness: show actual numerical pathologies
-      if d <= 0 || ~isfinite(d)
-          val = 1e12;   % very large penalty
-          return;
+        case "A"
+          % A-optimal: minimize trace(inv(M))
+          phi = trace(inv(M));
+
+        case "E"
+          % E-optimal: minimize 1 / lambda_min(M) or -lambda_min(M), your choice
+          lambda_min = min(eig(M));
+          if lambda_min <= 0 || ~isfinite(lambda_min)
+            phi = 1e12;
+          else
+            phi = 1 / lambda_min;
+          end
+
+        case "I"
+          % placeholder until you wire in your I-optimal stuff
+          phi = 0;
+
+        otherwise
+          error("Unknown criterion: %s", obj.problem.criteria);
       end
-
-      val = -log(d);
     end
+
   end
 end
