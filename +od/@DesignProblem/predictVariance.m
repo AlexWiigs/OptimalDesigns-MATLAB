@@ -1,4 +1,4 @@
-% BUG: Will be slightly off with center point added?
+% BUG: Will be slightly off with center point added
 
 function V = predictVariance(obj, u_dim)
   U = obj.gridPoints(u_dim); % cover the design space
