@@ -13,7 +13,7 @@ installation guide and usage notes below for setup informations.
 - Supports polynomial, logistic, and Poisson models
 - Handles D-, A-, E-, and I-optimality
 - Clear result objects with support points, weights, criterion value, and runtime
-- Optional post-processing tools including weight filtering, thresholding, and point merging
+- Optional post-processing tools including weight filtering, and point merging
 
 ## Example
 
