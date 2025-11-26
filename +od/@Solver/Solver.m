@@ -11,12 +11,13 @@ classdef Solver
     end
 
     function result = solve(obj)
-      [X, w, M, crit] = obj.solve_core();
+      [X, w, M, crit, runtime] = obj.solve_core();
       result = od.DesignResult(X, w, M, crit, obj.solver_name, obj.problem);
+      result.runtime = runtime;
     end
   end
 
   methods (Access = protected, Abstract)
-    [X, w, M, crit] = solve_core(obj)
+    [X, w, M, crit, runtime] = solve_core(obj)
   end
 end

@@ -1,11 +1,12 @@
 classdef DesignResult
   properties
-    X                 % support points
-    w                 % weights
-    M                 % information matrix
-    criterion_value   % scalar criterion (e.g. log det M)
-    solver_name       % e.g. "CVX"
-    problem           % handle back to the DesignProblem (optional)
+    criterion_value      % scalar criterion (e.g. log det M)
+    solver_name          % e.g. "CVX"
+    runtime double = NaN % Computation time in seconds
+    X                    % unfiltered support points
+    w                    % unfiltered weights
+    M                    % information matrix
+    problem              % handle back to the DesignProblem
   end
 
   methods

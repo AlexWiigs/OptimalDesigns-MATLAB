@@ -23,11 +23,12 @@ classdef CVXSolver < od.Solver
   end
 
   methods (Access = protected)
-    function [X, w, M, crit] = solve_core(obj)
+    function [X, w, M, crit, runtime] = solve_core(obj)
       X  = obj.problem.gridPoints(obj.u_dim);
       Mi = obj.problem.informationTensor(X);
       k  = size(X, 1);
 
+      start_timer = tic;
       if obj.quiet                                        % CVX control output
         cvx_begin quiet
       else
@@ -67,7 +68,7 @@ classdef CVXSolver < od.Solver
 
           otherwise
             error("Unknown optimality criterion: %s", ...
-                obj.problem.optimality_criteria);
+                obj.problem.criteria);
         end
 
         % minimize( -log_det(M) )                
@@ -76,8 +77,9 @@ classdef CVXSolver < od.Solver
           0 <= w <= 1;
           sum(w) == 1;
       cvx_end
+      runtime = toc(start_timer);
 
-      crit = log_det(M);
+      crit = cvx_optval;
     end
   end
 end

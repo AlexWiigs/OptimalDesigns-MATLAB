@@ -10,27 +10,23 @@ classdef PSOSolver < od.Solver
       arguments
         problem
         max_support (1,1) double {mustBePositive}
-        options.quiet logical = true   % placeholder; not used yet
+        options.quiet logical = true   % placeholder
       end
 
-      % Call parent Solver constructor with solver name "PSO"
       obj@od.Solver(problem, "PSO");
-
       obj.max_support = max_support;
-      obj.options     = options;  % stored for future use (PSO options later)
+      obj.options     = options;  % TODO: Not yet implimented
     end
   end
 
   methods (Access = protected)
-    function [X, w, M, crit] = solve_core(obj)
-      % TEMP: no PSO yet. Just compute lb, ub, nvars and return them.
-
+    function [X, w, M, crit, runtime] = solve_core(obj)
       v     = obj.problem.num_variables;
       k     = obj.max_support;
       range = obj.problem.range;
       nvars = v * k + k;
 
-      % Calculate the bounds
+      % bounds
       lb_coords  = -range * ones(v * k, 1);
       ub_coords  =  range * ones(v * k, 1);
       lb_weights = zeros(k, 1);
@@ -38,21 +34,29 @@ classdef PSOSolver < od.Solver
       lb = [lb_coords; lb_weights];
       ub = [ub_coords; ub_weights];
 
-      % Call particleswarm
+      % PSO call
       objective = @(x) obj.objectiveFunction(x);
-      x_opt = particleswarm(objective, nvars, lb, ub);
+      start_timer = tic;
+      [x_opt, fval] = particleswarm(objective, nvars, lb, ub);
+      runtime = toc(start_timer);
 
-      % extract information
-      support_points = x_opt(1: v*k);
-      support_points = reshape(support_points, [k, v]);
+      % extract optimal particles
+      support_points = reshape(x_opt(1: v*k), [k, v]);
       weights = x_opt(v*k + 1 : v*k + k);
       weights = weights(1:k) / sum(weights(1:k));
 
-      % Return them in the slots expected by Solver/DesignResult
+      % compute optimal information matrix
+      Mi = obj.problem.informationTensor(support_points);
+      h = size(Mi, 1);
+      M = zeros(h,h);
+      for i = 1:k
+        M = M + weights(i) * Mi(:, :, i);
+      end
+
+      % outputs
       X    = support_points;      % so result.X = lb
       w    = weights;      % so result.w = ub
-      M    = nvars;   % so result.M = nvars (scalar)
-      crit = NaN;     % no criterion yet
+      crit = fval;     % no criterion yet
     end
 
     function phi = objectiveFunction(obj, x)
