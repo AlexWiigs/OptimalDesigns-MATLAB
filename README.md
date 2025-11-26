@@ -3,7 +3,17 @@
 
 This software provides the user with a flexible way to find a variety of optimal
 designs using both PSO and CVX-based algorithms in a few lines of code. See the
-installation guide and usage notes below for setup infomration.
+installation guide and usage notes below for setup informations.
+
+## Features
+
+- Integrates both CVX and PSO solvers
+- Define regression models with \(v\) variables and degree \(d\), symmetric about the origin
+- Automatically constructs bases, regression matrices, information matrices, and optimality criteria
+- Supports polynomial, logistic, and Poisson models
+- Handles D-, A-, E-, and I-optimality
+- Clear result objects with support points, weights, criterion value, and runtime
+- Optional post-processing tools including weight filtering, thresholding, and point merging
 
 ## Example
 
@@ -66,7 +76,8 @@ documentation:
 
 - [DesignProblem](/docs/DesignProblem.md)
 - [CVXSolver](/docs/CVXSolver.md)
-- [PSOSOlver](/docs/PSOSolver.md)
+- [PSOSolver](/docs/PSOSolver.md)
+- [DesignResult](/docs/DesignResult.md)
 
 OptimalDesign works by defining two objects, one where you specify an optimal
 design problem that you would like to be solved and one specifying how you would
@@ -83,21 +94,3 @@ like the solver to calculate the solution.
 - Has a common interface for each solver
 - Stores the final design, weights, status, timing, etc
 - Uses children to implement the solve method
-
-**CVXSolver < Solver**
-
-- takes a DesignProblem
-- Implements `solve()` using CVX
-- Produces solver diagnostics
-
-**Default Settings:**
-
-```matlab
-precision = "default";
-voerbose = false;
-max_iters = [];
-u_dim = 5
-```
-
-**PSOSolver < Solver**
-
