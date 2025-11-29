@@ -30,6 +30,17 @@ Find the optimal design and extract relevant properties:
 ```matlab
 
 >> result = solver.solve();
+>> disp(result)
+  DesignResult with properties:
+
+    criterion_value: 6.4378
+        solver_name: "CVX"
+            runtime: 0.7940
+                  X: [121×2 double]
+                  w: [121×1 double]
+                  M: [3×3 double]
+            problem: [1×1 od.DesignProblem]
+
 >> [support_points, weights] = result.filterWeights();
 >> disp(result.criterion_value)
     6.4378
