@@ -9,7 +9,7 @@ installation guide and usage notes below for setup information.
 
 - Integrates both CVX and PSO solvers
 - Define regression models with \(v\) variables and degree \(d\), symmetric about the origin within a specified range \(r\)
-- Automatically constructs bases, regression matrices, information matrices, and optimality criteria
+- Automatically constructs basis vectors, information matrices, and optimality criteria
 - Supports polynomial, logistic, and Poisson models
 - Handles D-, A-, E-, and I-optimality
 - Clear result objects with support points, weights, criterion value, and runtime
