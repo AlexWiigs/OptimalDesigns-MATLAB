@@ -22,10 +22,10 @@ specified by its:
 * **criterion:** A String which specifies criteria for an optimal design.
     Valid Inputs: "D", "A", "E", "I"
 
-**Optinal parameters**
-must be entered at after the mandatory paramters.
+**Optimal parameters**
+must be entered at after the mandatory parameters.
 
-* {**pilot_beta:** a vector of length $\binom{v +d}{d}$, which specifies the
+* **pilot_beta:** a vector of length $\binom{v +d}{d}$, which specifies the
 initial estimates for linear parameters in a pilot study. These are necessary
 for finding GLM optimal designs. If "polynomial" is picked an empty list will be
 passed to the design object which is not used. If no pilot_beta is passed for a
@@ -55,8 +55,8 @@ GLm, a zero vector will be used instead.}
 
 ## Public Methods
 
-DesignProblem contains many methods for calcualting mathematical results
-relavent to the optimization problem. the solvers are designed to use these values
+DesignProblem contains many methods for calculating mathematical results
+relevant to the optimization problem. The solvers are designed to use these values
 automatically. Nevertheless, I have opted to keep most of these methods public to provide
 the user with the ability to reference them for research or troubleshooting.
 
@@ -73,11 +73,11 @@ calculateBasis             gridPoints
 
 ### Cover DesignProblem with grid points
 
-The `gridPoints()` method gets an integer which represents the amount of evenly
-spaced points to split each variable into and returns them as a $v \times
-\binom{v + d}{d}$ matrix. Each row in the matrix represents a point in the
-resulting lattice grid. This function is very useful for using CVXSolver or
-estimating the response variance of the regression model.
+The `gridPoints()` method gets an integer, `u_dim` which represents the amount
+of evenly spaced points to split each variable into and returns them as a
+$u_{dim}^{v}$ matrix. Each row in the matrix represents a point in the resulting
+lattice grid. This function is very useful for using CVXSolver or estimating the
+response variance of the regression model.
 
 **Example:**
 
@@ -91,7 +91,7 @@ Using the design problem specified under the constructor heading:
 
 ```
 
-### Calcaulate basis vectors for each potential design point
+### Calculate basis vectors for each potential design point
 
 The `basisMatrix()` method expects a $k \times v$ matrix, where each row
 represents a support point in the design matrix and returns a basis vector
@@ -126,10 +126,10 @@ ADD
 
 When solving for a GLM regression model (logistic, Poisson, etc...) the mean
 response changes with the linear predictor through the link function. Thus it is
-necessary to calcaulte a calibration weight for each design points contribution
+necessary to calculate a calibration weight for each design points contribution
 to the design problem. These weights require passing an optional list
-`pilot_betas`, of priliminary estimates for the model linear parameters. If no
-vector is passed a preliminary estiamte of $0$ gets passed for each parameter
+`pilot_betas`, of preliminary estimates for the model linear parameters. If no
+vector is passed a preliminary estimate of $0$ gets passed for each parameter
 estimate.
 
 **Example:**
@@ -146,10 +146,10 @@ estimate.
 
 ### Estimate the prediction variance of the response
 
-For optimality criteria focused on reducing the reponse of the regression model,
-such as I-optimality, it is necessary to estiamte the predicted response
+For optimality criteria focused on reducing the response of the regression model,
+such as I-optimality, it is necessary to estimate the predicted response
 variance of the model. This can be done by covering the design surface with
-points and using them to estiamte the variance numerically. Much like
+points and using them to estimate the variance numerically. Much like
 `gridPoints()`, `predictVariance()` requires passing an integer which represents
 the points each variable gets split into, resulting a total design covering of
 $u_{\text{dim}}^{v}$ points. The more points used to cover the design space, the

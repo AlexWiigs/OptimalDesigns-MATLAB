@@ -107,7 +107,7 @@ classdef PSOSolver < od.Solver
           end
 
         case "I"
-          % placeholder until you wire in your I-optimal stuff
+          % placeholder until I wire in your I-optimal stuff
           phi = 0;
 
         otherwise

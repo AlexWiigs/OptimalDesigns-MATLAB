@@ -3,17 +3,18 @@
 
 This software provides the user with a flexible way to find a variety of optimal
 designs using both PSO and CVX-based algorithms in a few lines of code. See the
-installation guide and usage notes below for setup informations.
+installation guide and usage notes below for setup information.
 
 ## Features
 
 - Integrates both CVX and PSO solvers
-- Define regression models with \(v\) variables and degree \(d\), symmetric about the origin
+- Define regression models with \(v\) variables and degree \(d\), symmetric about the origin within a specified range \(r\)
 - Automatically constructs bases, regression matrices, information matrices, and optimality criteria
 - Supports polynomial, logistic, and Poisson models
 - Handles D-, A-, E-, and I-optimality
 - Clear result objects with support points, weights, criterion value, and runtime
-- Optional post-processing tools including weight filtering, and point merging
+- Optional post-processing tools including weight filtering, point merging, and
+  equivalence theorem analysis on weights
 
 ## Example
 

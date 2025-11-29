@@ -57,7 +57,7 @@ classdef CVXSolver < od.Solver
             maximize( lambda_min(M) )
 
           case "I"
-            V = obj.problem.predictVariance(obj.u_dim);  % Cajole CVX t accept VM
+            V = obj.problem.predictVariance(obj.u_dim);  % reform V so CVX accepts it
             Vsym = (V + V.') / 2;
             Vsqrt = sqrtm(Vsym);
             Vsqrt_inv = inv(Vsqrt);
@@ -71,8 +71,6 @@ classdef CVXSolver < od.Solver
                 obj.problem.criteria);
         end
 
-        % minimize( -log_det(M) )                
-        % minimize()
         subject to
           0 <= w <= 1;
           sum(w) == 1;
