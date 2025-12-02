@@ -7,7 +7,7 @@ function V = predictVariance(obj, u_dim)
 
   r = obj.range;
   v = obj.num_variables;
-  cell_vol = (2 * r / (u_dim - 1))^v; % calcaulte cell volume
+  cell_vol = (2 * r / (u_dim - 1))^v; % calculate cell volume
 
   V = zeros(p, p);
   for i = 1:u_cov

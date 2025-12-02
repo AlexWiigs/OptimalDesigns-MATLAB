@@ -2,20 +2,20 @@ classdef PSOSolver < od.Solver
 
   properties
     max_support
-    options
+    u_dim
   end
 
   methods
-    function obj = PSOSolver(problem, max_support, options)
+    function obj = PSOSolver(problem, max_support, u_dim)
       arguments
         problem
         max_support (1,1) double {mustBePositive}
-        options.quiet logical = true   % placeholder
+        u_dim (1,1) double {mustBePositive} = 5;
       end
 
       obj@od.Solver(problem, "PSO");
       obj.max_support = max_support;
-      obj.options     = options;  % TODO: Not yet implimented
+      obj.u_dim = u_dim;
     end
   end
 
@@ -56,7 +56,13 @@ classdef PSOSolver < od.Solver
       % outputs
       X    = support_points;      % so result.X = lb
       w    = weights;      % so result.w = ub
-      crit = fval;     % no criterion yet
+
+      if upper(obj.problem.criteria) == "E"
+        eigvals = eig(M);
+        crit    = min(eigvals);
+      else
+        crit = fval;     % no criterion yet
+      end
     end
 
     function phi = objectiveFunction(obj, x)
@@ -70,7 +76,7 @@ classdef PSOSolver < od.Solver
       support_points = reshape(x(1 : v * k), [k, v]);
       weights        = x(v * k + 1 : v * k + k);
 
-      % safe normalize weights
+      % normalize weights
       s = sum(weights);
       if s <= 0 || ~isfinite(s)
         phi = 1e12;    % big penalty for degenerate particle
@@ -107,8 +113,15 @@ classdef PSOSolver < od.Solver
           end
 
         case "I"
-          % placeholder until I wire in your I-optimal stuff
-          phi = 0;
+          V = obj.problem.predictVariance(obj.u_dim);
+          Vsym = 0.5 * ( V + V.');
+          Vsqrt = sqrtm(Vsym);
+          Vsqrt = 0.5 * (Vsqrt + Vsqrt.');
+          Vsqrt_inv = inv(Vsqrt);
+
+          MV = Vsqrt_inv * M * Vsqrt_inv';
+          MV = 0.5 * (MV + MV.');
+          phi = trace( inv(MV));
 
         otherwise
           error("Unknown criterion: %s", obj.problem.criteria);
