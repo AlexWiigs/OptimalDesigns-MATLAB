@@ -42,9 +42,6 @@ Find the optimal design and extract relevant properties:
             problem: [1×1 od.DesignProblem]
 
 >> [support_points, weights] = result.filterWeights();
->> disp(result.criterion_value)
-    6.4378
-
 >> disp(support_points')
     -5     5    -5     5
     -5    -5     5     5

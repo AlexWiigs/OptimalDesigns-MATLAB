@@ -9,7 +9,7 @@ function [X_out, w_out] = filterWeights2(obj, options)
   arguments
     obj
     options.threshold    (1,1) double  = 0.01
-    options.renormalize  (1,1) logical = false
+    options.renormalize  (1,1) logical = true
     options.merge_radius (1,1) double  = 0      % 0 → no merging
   end
 
