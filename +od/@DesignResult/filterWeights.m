@@ -1,15 +1,9 @@
-function [X_out, w_out] = filterWeights2(obj, options)
-  % Usage:
-  %   [X_out, w_out] = result.filterWeights2( ...
-  %       threshold    = 0.05, ...
-  %       renormalize  = true, ...
-  %       merge_radius = 6 ...
-  %   );
+function [X_out, w_out] = filterWeights(obj, options)
 
   arguments
     obj
     options.threshold    (1,1) double  = 0.01
-    options.renormalize  (1,1) logical = true
+    options.renormalize  (1,1) logical = false
     options.merge_radius (1,1) double  = 0      % 0 → no merging
   end
 
@@ -21,9 +15,7 @@ function [X_out, w_out] = filterWeights2(obj, options)
   renormalize  = options.renormalize;
   merge_radius = options.merge_radius;
 
-  % ---------------------------
   % STEP 1 — MERGING (optional)
-  % ---------------------------
   if merge_radius > 0 && ~isempty(X_in)
     [k, v] = size(X_in);
 
@@ -69,16 +61,12 @@ function [X_out, w_out] = filterWeights2(obj, options)
     w_in = merged_w;
   end
 
-  % ---------------------------
   % STEP 2 — THRESHOLD
-  % ---------------------------
   mask  = (w_in >= threshold);
   X_out = X_in(mask, :);
   w_out = w_in(mask);
 
-  % ---------------------------
-  % STEP 3 — RENORMALIZE (opt)
-  % ---------------------------
+  % STEP 3 — RENORMALIZE (optional)
   if renormalize && ~isempty(w_out)
     total = sum(w_out);
     if total > 0

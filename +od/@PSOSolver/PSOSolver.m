@@ -1,21 +1,33 @@
 classdef PSOSolver < od.Solver
 
   properties
-    max_support
-    u_dim
+    max_support              % maximum number of support points
+    u_dim                    % integration grid dimension for I-optimality
+    options                  % optimoptions(@particleswarm)
   end
 
   methods
-    function obj = PSOSolver(problem, max_support, u_dim)
+    function obj = PSOSolver(problem, max_support, opts)
+
       arguments
         problem
         max_support (1,1) double {mustBePositive}
-        u_dim (1,1) double {mustBePositive} = 5;
+        opts.u_dim      (1,1) double {mustBePositive} = 5
+        opts.options                               = []
       end
 
+      % superclass ctor
       obj@od.Solver(problem, "PSO");
       obj.max_support = max_support;
-      obj.u_dim = u_dim;
+      obj.u_dim       = opts.u_dim;
+
+      % default PSO options if none supplied
+      if isempty(opts.options)
+        obj.options = optimoptions(@particleswarm, ...
+                                   "Display", "off");
+      else
+        obj.options = opts.options;
+      end
     end
   end
 
@@ -26,7 +38,7 @@ classdef PSOSolver < od.Solver
       range = obj.problem.range;
       nvars = v * k + k;
 
-      % bounds
+      % bounds for coordinates and weights
       lb_coords  = -range * ones(v * k, 1);
       ub_coords  =  range * ones(v * k, 1);
       lb_weights = zeros(k, 1);
@@ -35,33 +47,33 @@ classdef PSOSolver < od.Solver
       ub = [ub_coords; ub_weights];
 
       % PSO call
-      objective = @(x) obj.objectiveFunction(x);
+      objective   = @(x) obj.objectiveFunction(x);
       start_timer = tic;
-      [x_opt, fval] = particleswarm(objective, nvars, lb, ub);
+      [x_opt, fval] = particleswarm(objective, nvars, lb, ub, obj.options);
       runtime = toc(start_timer);
 
-      % extract optimal particles
-      support_points = reshape(x_opt(1: v*k), [k, v]);
-      weights = x_opt(v*k + 1 : v*k + k);
-      weights = weights(1:k) / sum(weights(1:k));
+      % extract optimal particle into support points and weights
+      support_points = reshape(x_opt(1 : v * k), [k, v]);
+      weights        = x_opt(v * k + 1 : v * k + k);
+      weights        = weights(1:k) / sum(weights(1:k));
 
       % compute optimal information matrix
       Mi = obj.problem.informationTensor(support_points);
-      h = size(Mi, 1);
-      M = zeros(h,h);
+      h  = size(Mi, 1);
+      M  = zeros(h, h);
       for i = 1:k
         M = M + weights(i) * Mi(:, :, i);
       end
 
       % outputs
-      X    = support_points;      % so result.X = lb
-      w    = weights;      % so result.w = ub
+      X = support_points;
+      w = weights;
 
       if upper(obj.problem.criteria) == "E"
         eigvals = eig(M);
         crit    = min(eigvals);
       else
-        crit = fval;     % no criterion yet
+        crit = fval;
       end
     end
 
@@ -72,39 +84,40 @@ classdef PSOSolver < od.Solver
       h = nchoosek(v + d, d);
       M = zeros(h, h);
 
-      % unpack
+      % unpack particle into support points and weights
       support_points = reshape(x(1 : v * k), [k, v]);
       weights        = x(v * k + 1 : v * k + k);
 
-      % normalize weights
+      % normalize weights and penalize degenerate particles
       s = sum(weights);
       if s <= 0 || ~isfinite(s)
-        phi = 1e12;    % big penalty for degenerate particle
+        phi = 1e12;              % big penalty
         return;
       end
       weights = weights / s;
 
-      % information matrix
+      % build information matrix
       Mi = obj.problem.informationTensor(support_points);
       for i = 1:k
         M = M + weights(i) * Mi(:, :, i);
       end
 
+      % evaluate optimality criterion
       switch upper(obj.problem.criteria)
         case "D"
           detM = det(M);
           if detM <= 0 || ~isfinite(detM)
             phi = 1e12;
           else
-            phi = -log(detM);
+            phi = -log(detM);    % maximize det(M) via minimizing -log det(M)
           end
 
         case "A"
-          % A-optimal: minimize trace(inv(M))
+          % A-optimal: minimize trace(M^{-1})
           phi = trace(inv(M));
 
         case "E"
-          % E-optimal: minimize 1 / lambda_min(M) or -lambda_min(M), your choice
+          % E-optimal: minimize 1 / lambda_min(M)
           lambda_min = min(eig(M));
           if lambda_min <= 0 || ~isfinite(lambda_min)
             phi = 1e12;
@@ -113,15 +126,16 @@ classdef PSOSolver < od.Solver
           end
 
         case "I"
-          V = obj.problem.predictVariance(obj.u_dim);
-          Vsym = 0.5 * ( V + V.');
-          Vsqrt = sqrtm(Vsym);
-          Vsqrt = 0.5 * (Vsqrt + Vsqrt.');
-          Vsqrt_inv = inv(Vsqrt);
+          % I-optimal: average prediction variance on integration grid
+          V        = obj.problem.predictVariance(obj.u_dim);
+          Vsym     = 0.5 * (V + V.');
+          Vsqrt    = sqrtm(Vsym);
+          Vsqrt    = 0.5 * (Vsqrt + Vsqrt.');
+          VsqrtInv = inv(Vsqrt);
 
-          MV = Vsqrt_inv * M * Vsqrt_inv';
-          MV = 0.5 * (MV + MV.');
-          phi = trace( inv(MV));
+          MV  = VsqrtInv * M * VsqrtInv';
+          MV  = 0.5 * (MV + MV.');
+          phi = trace(inv(MV));
 
         otherwise
           error("Unknown criterion: %s", obj.problem.criteria);
