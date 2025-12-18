@@ -13,7 +13,7 @@ classdef PSOSolver < od.Solver
         problem
         max_support (1,1) double {mustBePositive}
         opts.u_dim      (1,1) double {mustBePositive} = 5
-        opts.options                               = []
+        opts.options                                  = []
       end
 
       % superclass ctor
