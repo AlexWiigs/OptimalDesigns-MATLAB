@@ -1,36 +1,58 @@
 classdef CVXSolver < od.Solver
 
   properties
-    u_dim
+    % covering is either:
+    %  - scalar grid resolution (old u_dim)
+    %  - k-by-v candidate matrix (custom covering)
+    covering
+
     quiet     logical = true
     precision string  = "default"
-    d_delta (1,1) double {mustBePositive} = 1e-8   % D-opt regularization (adds delta*I)
   end
 
   methods
-    function obj = CVXSolver(problem, u_dim, options)
+    function obj = CVXSolver(problem, covering, options)
       arguments
         problem
-        u_dim (1,1) double {mustBePositive}
+        covering {mustBeNumeric}
         options.precision string = "default"
         options.quiet     logical = true
-        options.d_delta (1,1) double {mustBePositive} = 1e-8
       end
 
       obj@od.Solver(problem, "CVX");
-      obj.u_dim     = u_dim;
+      obj.covering  = covering;
       obj.quiet     = options.quiet;
       obj.precision = options.precision;
-      obj.d_delta   = options.d_delta;
+
+      % Validate covering
+      if isscalar(covering)
+        if ~(isfinite(covering) && covering > 0)
+          error("covering scalar must be a positive finite grid resolution.");
+        end
+      else
+        v = obj.problem.num_variables;
+        if size(covering,2) ~= v
+          error("Custom covering must be k-by-%d (num_variables).", v);
+        end
+      end
     end
   end
 
   methods (Access = protected)
     function [X, w, M, crit, runtime] = solve_core(obj)
 
-      % Candidate set and information tensor
-      X  = obj.problem.gridPoints(obj.u_dim);   % (k x v)
-      Mi = obj.problem.informationTensor(X);    % (p x p x k)
+      % Candidate set
+      cov = obj.covering;
+      if isscalar(cov)
+        u_dim = cov;
+        X = obj.problem.gridPoints(u_dim);   % (k x v)
+      else
+        u_dim = [];                          % not defined for custom covering
+        X = cov;                             % (k x v)
+      end
+
+      X  = unique(X, "rows", "stable");
+      Mi = obj.problem.informationTensor(X); % (p x p x k)
       k  = size(X, 1);
 
       start_timer = tic;
@@ -41,14 +63,14 @@ classdef CVXSolver < od.Solver
         cvx_begin
       end
 
-        % CVX precision
+        % CVX precision (leave "default" alone)
         mode = char(obj.precision);
         if ~strcmp(mode, "default")
           cvx_precision(mode);
         end
 
         % Design weights
-        variable w(k)
+        variable w(k) nonnegative
 
         % Information matrix
         M = 0;
@@ -60,19 +82,18 @@ classdef CVXSolver < od.Solver
         switch upper(obj.problem.criteria)
 
           case "D"
-            % D-optimality: maximize det_rootn(M + delta*I)
-            % This avoids log_det's successive-approximation / exponential cones
-            % and removes the auxiliary L/Schur-complement constraint.
-            p = size(M, 1);
-            maximize( det_rootn( M + obj.d_delta * eye(p) ) )
+            %maximize log_det(M)
+
+            % p = size(M, 1);
+            maximize det_rootn(M)
             subject to
-              0 <= w <= 1;
+              w <= 1;
               sum(w) == 1;
 
           case "A"
             minimize( trace_inv(M) )
             subject to
-              0 <= w <= 1;
+              w <= 1;
               sum(w) == 1;
 
           case "E"
@@ -80,12 +101,16 @@ classdef CVXSolver < od.Solver
             variable t
             maximize( t )
             subject to
-              0 <= w <= 1;
+              w <= 1;
               sum(w) == 1;
               M - t * eye(n) == semidefinite(n);
 
           case "I"
-            V         = obj.problem.predictVariance(obj.u_dim);
+            if isempty(u_dim)
+              error("I-opt currently requires a scalar grid resolution covering, since predictVariance(u_dim) is used.");
+            end
+
+            V         = obj.problem.predictVariance(u_dim);
             Vsym      = 0.5 * (V + V.');
             Vsqrt     = sqrtm(Vsym);
             Vsqrt_inv = inv(Vsqrt);
@@ -94,7 +119,7 @@ classdef CVXSolver < od.Solver
             MV = 0.5 * (MV + MV');
             minimize( trace_inv(MV) )
             subject to
-              0 <= w <= 1;
+              w <= 1;
               sum(w) == 1;
 
           otherwise
@@ -104,7 +129,16 @@ classdef CVXSolver < od.Solver
       cvx_end
 
       runtime = toc(start_timer);
-      crit    = cvx_optval;   % for D: det_rootn(M + delta*I), monotone w.r.t. logdet
+
+      % Report criterion_value on the *table* scale for D:
+      % crit = log_det(M + delta*I), computed stably.
+      if upper(obj.problem.criteria) == "D"
+        p = size(M, 1);
+        R = chol(M);
+        crit = 2 * sum(log(diag(R)));
+      else
+        crit = cvx_optval;
+      end
     end
   end
 end

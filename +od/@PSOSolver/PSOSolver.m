@@ -114,7 +114,13 @@ classdef PSOSolver < od.Solver
 
         case "A"
           % A-optimal: minimize trace(M^{-1})
-          phi = trace(inv(M));
+          phi = trace(inv(M)); %%  NOTE: less stable?
+
+          % if rcond(M) < 13-12   NOTE: causes infinite iterations
+          %   phi = Inf;
+          % else
+          %   phi = trace(M \ eye(size(M,1)));
+          % end
 
         case "E"
           % E-optimal: minimize 1 / lambda_min(M)
