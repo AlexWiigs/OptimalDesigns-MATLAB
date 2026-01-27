@@ -47,8 +47,8 @@ classdef PSOSolver < od.Solver
       ub = [ub_coords; ub_weights];
 
       % PSO call
-      objective   = @(x) obj.objectiveFunction(x);
-      start_timer = tic;
+      objective    = @(x) obj.objectiveFunction(x);
+      start_timer  = tic;
       [x_opt, fval] = particleswarm(objective, nvars, lb, ub, obj.options);
       runtime = toc(start_timer);
 
@@ -64,16 +64,37 @@ classdef PSOSolver < od.Solver
       for i = 1:k
         M = M + weights(i) * Mi(:, :, i);
       end
+      M = 0.5 * (M + M'); % symmetrize for numerical stability
 
       % outputs
       X = support_points;
       w = weights;
 
-      if upper(obj.problem.criteria) == "E"
-        eigvals = eig(M);
-        crit    = min(eigvals);
-      else
-        crit = fval;
+      switch upper(obj.problem.criteria)
+
+        case "D"
+          % Report det(M)
+          [R, pflag] = chol(M);
+          if pflag ~= 0
+            % not positive definite => undefined determinant for D-opt reporting
+            crit = NaN;
+          else
+            crit = exp(2 * sum(log(diag(R))));
+          end
+
+        case "A"
+          crit = fval;
+
+        case "E"
+          % Report lambda_min(M)
+          eigvals = eig(M);
+          crit    = min(eigvals);
+
+        case "I"
+          crit = fval;
+
+        otherwise
+          error("Unknown criterion: %s", obj.problem.criteria);
       end
     end
 
@@ -101,6 +122,7 @@ classdef PSOSolver < od.Solver
       for i = 1:k
         M = M + weights(i) * Mi(:, :, i);
       end
+      M = 0.5 * (M + M'); % symmetrize for numerical stability
 
       % evaluate optimality criterion
       switch upper(obj.problem.criteria)
@@ -114,13 +136,7 @@ classdef PSOSolver < od.Solver
 
         case "A"
           % A-optimal: minimize trace(M^{-1})
-          phi = trace(inv(M)); %%  NOTE: less stable?
-
-          % if rcond(M) < 13-12   NOTE: causes infinite iterations
-          %   phi = Inf;
-          % else
-          %   phi = trace(M \ eye(size(M,1)));
-          % end
+          phi = trace(inv(M)); %% NOTE: less stable
 
         case "E"
           % E-optimal: minimize 1 / lambda_min(M)

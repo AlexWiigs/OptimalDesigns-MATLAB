@@ -130,14 +130,13 @@ classdef CVXSolver < od.Solver
 
       runtime = toc(start_timer);
 
-      % Report criterion_value on the *table* scale for D:
-      % crit = log_det(M + delta*I), computed stably.
+      % Report criterion_value on the table / RE scale
       if upper(obj.problem.criteria) == "D"
-        p = size(M, 1);
-        R = chol(M);
-        crit = 2 * sum(log(diag(R)));
+          % Stable computation of det(M) via Cholesky
+          R    = chol(M);
+          crit = exp(2 * sum(log(diag(R))));
       else
-        crit = cvx_optval;
+          crit = cvx_optval;
       end
     end
   end
