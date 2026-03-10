@@ -33,5 +33,6 @@ classdef DesignResult
     % Implemented in @DesignResult/filterWeights.m
     [X_out, w_out] = filterWeights(obj, options)
     stats          = checkOptimality(obj, u_dim, options)
+    comp           = compare(obj, other, options)
   end
 end
